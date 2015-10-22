@@ -4,7 +4,7 @@ function [ sumdist ] = DTW( MelCoefs, MelCoefsx )
 %   Input Recorded Model, Sample Model
 %   Output Calculated distance
 
-COEFSNUMBER = 12;
+COEFSNUMBER = 39;
 
 [samph, ~] = size(MelCoefsx);
 [sizh, ~] = size(MelCoefs);
@@ -20,7 +20,6 @@ for ns = 1:sizh
         d(ns, nw)  = sqrt(sum);        
     end
 end
-
 g = d;
 
 for ns = 2: sizh, g(ns, 1) = g(ns-1, 1) + d(ns, 1); end

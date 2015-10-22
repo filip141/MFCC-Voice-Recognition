@@ -1,45 +1,68 @@
-%Const variables
+clear all
+%% Const variables
 SAMPLERATE = 16000;
 NSEC = 1.5;
 N = 12;
 Nfilter = 26;
+coeffs = filter200;
+featureVector = [];
+coeffs = coeffs.Numerator;
 
-%Record and play voice sample 
-SIGNAL = wavrecord(NSEC*SAMPLERATE,SAMPLERATE,'double');
+%% Record and play voice sample 
+% SIGNAL = wavrecord(NSEC*SAMPLERATE,SAMPLERATE,'double');
+[SIGNAL,SAMPLERATE]=wavread('samples/Noise_Samples/FB/FB_4.wav');
+% [SIGNAL,SAMPLERATE]=wavread('samples/Clear_Samples/jeden.wav');
+
+%% Voice Activity Detector
+
+% Rotate signal
+SIGNAL = rotSig(SIGNAL);
+
+% VAD
+SIGNAL = voiceActivityDetector( SIGNAL, SAMPLERATE );
 wavplay(SIGNAL,SAMPLERATE);
-% [SIGNAL,SAMPLERATE]=wavread('tak.wav');
+figure
+plot(SIGNAL)
 
-SIGNAL = silence( SIGNAL );
+% High pass filter no information below 200 Hz
+SIGNAL = filter(coeffs, 1, SIGNAL);
 
-%Signal divided into 25milisecond frames
+%% Pre-emphasis
+SIGNAL = filter([1 -0.9735], 1, SIGNAL);
+
+% spectrogram(SIGNAL)
+
+%% Signal divided into 25milisecond frames
 [ FramesMatrix ] = Framing( SIGNAL, SAMPLERATE );
 [SHor SVec] = size(FramesMatrix);
 
-%Creating Hamming window
+
+% Creating Hamming window
 window = hamming(SVec);
 
-%For each Frame
+%% For each Frame
 for k = 1:SHor
-    MPSD = [];
-    %Multiply Frame with Hamming window
+    
+    % Multiply Frame with Hamming window
     frame = FramesMatrix(k,:).*window';
-    %Preemfaza
-    frame = filter([1 -0.9735], 1, frame); 
-    %Calculating Power Spectrum Density
+    
+   
+    % Calculating Power Spectrum Density
     PSD = abs(fft(frame,512)).^2;
     PSD = PSD(256:end);
-    %Calculate Mel filterbank
+    
+    % Calculate Mel filterbank
     [ MelMatrix ] = MelFilterBanks( 300, 8000, SAMPLERATE, Nfilter );
     
-    %MelEnergies vector initialization
+    % MelEnergies vector initialization
     MelEnergies = zeros(26,257);
-    %Init vector for scalar calculation
+    % Init vector for scalar calculation
     MelScalarEnergies = zeros(26);
     
-    %Multiple each filter with PSD
+    % Multiple each filter with PSD
     for i = 1:26
         MelEnergies(i,:) = MelMatrix(i,:).*PSD;
-        %Energy inside filter
+        % Energy inside filter
         MelScalarEnergies(i) = sum(MelEnergies(i,:));
     end
     
@@ -50,43 +73,17 @@ for k = 1:SHor
         for n = 1:Nfilter
             CepstralSum = CepstralSum + MelLogEnergies(n).*cos((pi*j/Nfilter)*(n-0.5));
         end
-        MelCoefs(k, j) = sqrt(2/Nfilter)*CepstralSum;
-    end   
+        MelCoefs(j) = sqrt(2/Nfilter)*CepstralSum;
+    end 
+    frameEnergy = sum(frame.^2);
+    MelExtended = [ MelCoefs' ; frameEnergy ] ;
+    featureVector = [ featureVector  MelExtended ];
 end
 
-%Load Sample Bank
-load('samplebank.mat');
+featureVector = findDeltas(featureVector);
+% surf(featureVector)
 
-%Dynamic Time Warping Function
-[ sumdist(1) ] = DTW( MelCoefs, MelCoefs1 );
-
-[ sumdist(2) ] = DTW( MelCoefs, MelCoefs2 );
-
-[ sumdist(3) ] = DTW( MelCoefs, MelCoefs3 );
-
-[ sumdist(4) ] = DTW( MelCoefs, MelCoefs4 );
-
-[ sumdist(5) ] = DTW( MelCoefs, MelCoefsTak );
-
-[ sumdist(6) ] = DTW( MelCoefs, MelCoefsNie );
-
-if (min(sumdist) == sumdist(1))
-    '1'
-end
-if (min(sumdist) == sumdist(2))
-    '2'
-end
-if (min(sumdist) == sumdist(3))
-    '3'
-end
-if (min(sumdist) == sumdist(4))
-    '4'
-end
-if (min(sumdist) == sumdist(5))
-    'Tak'
-end
-if (min(sumdist) == sumdist(6))
-    'Nie'
-end
+%% Recognizing word by no statistic algoritm DTW
+recognizeDTW( featureVector' )
 
 
