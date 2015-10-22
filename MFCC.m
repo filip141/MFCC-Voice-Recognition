@@ -1,16 +1,17 @@
-clear all
+% clear all
 %% Const variables
 SAMPLERATE = 16000;
 NSEC = 1.5;
 N = 12;
 Nfilter = 26;
+PSDLength = 257;
 coeffs = filter200;
 featureVector = [];
 coeffs = coeffs.Numerator;
 
 %% Record and play voice sample 
-% SIGNAL = wavrecord(NSEC*SAMPLERATE,SAMPLERATE,'double');
-[SIGNAL,SAMPLERATE]=wavread('samples/Noise_Samples/FB/FB_4.wav');
+SIGNAL = wavrecord(NSEC*SAMPLERATE,SAMPLERATE,'double');
+% [SIGNAL,SAMPLERATE]=wavread('samples/Noise_Samples/FB/FB_4.wav');
 % [SIGNAL,SAMPLERATE]=wavread('samples/Clear_Samples/jeden.wav');
 
 %% Voice Activity Detector
@@ -49,15 +50,15 @@ for k = 1:SHor
    
     % Calculating Power Spectrum Density
     PSD = abs(fft(frame,512)).^2;
-    PSD = PSD(256:end);
-    
+    PSD = PSD(PSDLength - 1:end);
+
     % Calculate Mel filterbank
-    [ MelMatrix ] = MelFilterBanks( 300, 8000, SAMPLERATE, Nfilter );
-    
+    [ MelMatrix ] = MelFilterBanks( 300, 8000, SAMPLERATE, Nfilter, PSDLength );
+
     % MelEnergies vector initialization
     MelEnergies = zeros(26,257);
     % Init vector for scalar calculation
-    MelScalarEnergies = zeros(26);
+    MelScalarEnergies = zeros(1,26);
     
     % Multiple each filter with PSD
     for i = 1:26
@@ -73,7 +74,7 @@ for k = 1:SHor
         for n = 1:Nfilter
             CepstralSum = CepstralSum + MelLogEnergies(n).*cos((pi*j/Nfilter)*(n-0.5));
         end
-        MelCoefs(j) = sqrt(2/Nfilter)*CepstralSum;
+        MelCoefs(j) = CepstralSum.*sqrt(2/Nfilter);
     end 
     frameEnergy = sum(frame.^2);
     MelExtended = [ MelCoefs' ; frameEnergy ] ;

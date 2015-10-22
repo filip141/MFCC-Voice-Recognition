@@ -70,7 +70,7 @@ Nos = length(signal);
 % change signal in few ms 
 for k = 10:Nos - 2
     if signal(k) == 1 && ( signal(k - 1) ~= 1 || signal(k - 2) ~= 1) && ( signal(k + 1) ~= 1 || signal(k + 2) ~= 1)
-        signal(k) = 0
+        signal(k) = 0;
     end
 end
 refInd = find(signal > 0);
