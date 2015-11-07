@@ -6,9 +6,6 @@ function [ sumdist ] = DTW( MelCoefs, MelCoefsx )
 
 COEFSNUMBER = 39;
 
-MelCoefs = MelCoefs';
-MelCoefsx = MelCoefsx';
-
 [samph, ~] = size(MelCoefsx);
 [sizh, ~] = size(MelCoefs);
 
@@ -17,8 +14,8 @@ for ns = 1:sizh
     for nw = 1:samph
         sum = 0;
         for k = 1:COEFSNUMBER
-            
-           sum = sum + (MelCoefs(ns, k) - MelCoefsx(nw, k)).^2;  
+          if ns <
+          sum = sum + (MelCoefs(ns, k) - MelCoefsx(nw, k)).^2;  
         end
         d(ns, nw)  = sqrt(sum);        
     end

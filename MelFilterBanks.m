@@ -6,6 +6,7 @@ function [ Mel ] = MelFilterBanks( Low, High, SampleRate, Nfilter, PSDLength )
 %   Output: Mel FIlter Bank
 
 FilterPoints = PSDLength;
+nfft = (FilterPoints - 1)*2 + 1;
 
 %% Set up High and Low frequency
 HighFreq = High;
@@ -23,7 +24,7 @@ Melfreqs(end + 1) = HighMel;
 
 %% Calculate hertz vector
 HzFreqs = MelToHertz(Melfreqs);
-SampleFreqs = floor(512*HzFreqs/SampleRate) ;
+SampleFreqs = floor(nfft*HzFreqs/SampleRate);
 for i = 2:(Nfilter + 1)
     for j = 1:FilterPoints
         if(j < SampleFreqs(i-1))

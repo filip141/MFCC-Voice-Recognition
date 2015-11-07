@@ -1,4 +1,4 @@
-clear all
+% clear all
 %% Const variables
 SAMPLERATE = 16000;
 NSEC = 1.5;
@@ -9,8 +9,8 @@ featureVector = [];
 coeffs = coeffs.Numerator;
 
 %% Record and play voice sample 
-SIGNAL = wavrecord(NSEC*SAMPLERATE,SAMPLERATE,'double');
-% [SIGNAL,SAMPLERATE]=wavread('samples/Noise_Samples/FB/FB_1.wav');
+% SIGNAL = wavrecord(NSEC*SAMPLERATE,SAMPLERATE,'double');
+[SIGNAL,SAMPLERATE]=wavread('samples/Noise_Samples/FB/FB_1.wav');
 % [SIGNAL,SAMPLERATE]=wavread('samples/Clear_Samples/jeden.wav');
 
 %% Voice Activity Detector
@@ -20,7 +20,7 @@ SIGNAL = rotSig(SIGNAL);
 
 % VAD
 SIGNAL = voiceActivityDetector( SIGNAL, SAMPLERATE );
-wavplay(SIGNAL,SAMPLERATE);
+% wavplay(SIGNAL,SAMPLERATE);
 % figure
 % plot(SIGNAL)
 
@@ -41,7 +41,8 @@ PSDLength = nfft/2+1;
 
 % Creating Hamming window
 window = hamming(SVec);
-
+testvec = [];
+basis = [];
 
 %% For each Frame
 for k = 1:SHor
@@ -52,6 +53,7 @@ for k = 1:SHor
     % Calculating Power Spectrum Density
     PSD = abs(fft(frame,nfft)).^2;
     PSD = PSD( 1 : PSDLength );
+    testvec = [testvec PSD'];
     
     % Calculate Mel filterbank
     [ MelMatrix ] = MelFilterBanks( 300, SAMPLERATE/2, SAMPLERATE, Nfilter, PSDLength );
@@ -75,6 +77,13 @@ for k = 1:SHor
         for n = 1:Nfilter
             CepstralSum = CepstralSum + MelLogEnergies(n).*cos((pi*j/Nfilter)*(n-0.5));
         end
+        hold on
+        if(mod(j,5)==0)
+            clf
+        end
+%         plot(MelLogEnergies.*cos((pi*j/Nfilter)*([1:Nfilter]-0.5)))
+        
+%         pause
         MelCoefs(j) = CepstralSum.*sqrt(2/Nfilter);
     end 
     frameEnergy = sum(frame.^2);
@@ -82,11 +91,10 @@ for k = 1:SHor
     featureVector = [ featureVector  MelExtended ];
 end
 featureVector = findDeltas(featureVector);
-% figure
-% surf(featureVector)
-
+figure
+surf(featureVector)
 
 %% Recognizing word by no statistic algoritm DTW
-recognizeDTW( featureVector )
+% recognizeDTW( featureVector' )
 
 
