@@ -1,100 +1,13 @@
-% clear all
-%% Const variables
-SAMPLERATE = 16000;
-NSEC = 1.5;
-N = 12;
-Nfilter = 26;
-coeffs = filter200;
-featureVector = [];
-coeffs = coeffs.Numerator;
+function [ output_args ] = mfcc( input_args )
+%   Function extract features from speech signal
+% in this section are used all spectral feature 
+% extraction methods like VAD, windowing, dfft,
+% creating melfilter bank and on the and extracting 
+% mfcc features by performing dct on output from Mel-filterbank
+%
+%   Input : Wav file 16kHz but could be n*16kHz [ 32kHz, 48kHz etc ] 
+%   Output Mf
 
-%% Record and play voice sample 
-% SIGNAL = wavrecord(NSEC*SAMPLERATE,SAMPLERATE,'double');
-[SIGNAL,SAMPLERATE]=wavread('samples/Noise_Samples/FB/FB_1.wav');
-% [SIGNAL,SAMPLERATE]=wavread('samples/Clear_Samples/jeden.wav');
 
-%% Voice Activity Detector
-
-% Rotate signal
-SIGNAL = rotSig(SIGNAL);
-
-% VAD
-SIGNAL = voiceActivityDetector( SIGNAL, SAMPLERATE );
-% wavplay(SIGNAL,SAMPLERATE);
-% figure
-% plot(SIGNAL)
-
-% High pass filter no information below 200 Hz
-SIGNAL = filter(coeffs, 1, SIGNAL);
-
-%% Pre-emphasis
-SIGNAL = filter([1 -0.9735], 1, SIGNAL);
-
-% spectrogram(SIGNAL)
-
-%% Signal divided into 25milisecond frames
-[ FramesMatrix ] = Framing( SIGNAL, SAMPLERATE );
-[SHor SVec] = size(FramesMatrix);
-
-nfft = 2^nextpow2( (0.025*SAMPLERATE) );
-PSDLength = nfft/2+1; 
-
-% Creating Hamming window
-window = hamming(SVec);
-testvec = [];
-basis = [];
-
-%% For each Frame
-for k = 1:SHor
-    
-    % Multiply Frame with Hamming window
-    frame = FramesMatrix(k,:).*window';
-    
-    % Calculating Power Spectrum Density
-    PSD = abs(fft(frame,nfft)).^2;
-    PSD = PSD( 1 : PSDLength );
-    testvec = [testvec PSD'];
-    
-    % Calculate Mel filterbank
-    [ MelMatrix ] = MelFilterBanks( 300, SAMPLERATE/2, SAMPLERATE, Nfilter, PSDLength );
-
-    % MelEnergies vector initialization
-    MelEnergies = zeros(26,PSDLength);
-    % Init vector for scalar calculation
-    MelScalarEnergies = zeros(1,26);
-    
-    % Multiple each filter with PSD
-    for i = 1:26
-        MelEnergies(i,:) = MelMatrix(i,:).*PSD;
-        % Energy inside filter
-        MelScalarEnergies(i) = sum(MelEnergies(i,:));
-    end
-
-    %Energies Logaritm
-    MelLogEnergies = log(MelScalarEnergies);
-    for j = 1:N
-        CepstralSum = 0;
-        for n = 1:Nfilter
-            CepstralSum = CepstralSum + MelLogEnergies(n).*cos((pi*j/Nfilter)*(n-0.5));
-        end
-        hold on
-        if(mod(j,5)==0)
-            clf
-        end
-%         plot(MelLogEnergies.*cos((pi*j/Nfilter)*([1:Nfilter]-0.5)))
-        
-%         pause
-        MelCoefs(j) = CepstralSum.*sqrt(2/Nfilter);
-    end 
-    frameEnergy = sum(frame.^2);
-    MelExtended = [ MelCoefs' ; frameEnergy ] ;
-    featureVector = [ featureVector  MelExtended ];
 end
-featureVector = findDeltas(featureVector);
-figure
-surf(featureVector)
-
-%% Recognizing word by no statistic algoritm DTW
-% recognizeDTW( featureVector' )
-
 

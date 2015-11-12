@@ -1,6 +1,7 @@
 clear all
 %% Const variables
 SAMPLERATE = 16000;
+def_samplerate = 16000;
 NSEC = 1.5;
 N = 12;
 Nfilter = 26;
@@ -9,14 +10,18 @@ featureVector = [];
 coeffs = coeffs.Numerator;
 
 %% Record and play voice sample 
-SIGNAL = wavrecord(NSEC*SAMPLERATE,SAMPLERATE,'double');
-% [SIGNAL,SAMPLERATE]=wavread('samples/Noise_Samples/FB/FB_1.wav');
+% SIGNAL = wavrecord(NSEC*SAMPLERATE,SAMPLERATE,'double');
+[SIGNAL,SAMPLERATE]=wavread('samples/Noise_Samples/MG/MG_2.wav');
 % [SIGNAL,SAMPLERATE]=wavread('samples/Clear_Samples/jeden.wav');
 
 %% Voice Activity Detector
 
 % Rotate signal
 SIGNAL = rotSig(SIGNAL);
+
+% Signal decimation
+SIGNAL = decimate(SIGNAL,SAMPLERATE,def_samplerate);
+SAMPLERATE = def_samplerate;
 
 % VAD
 SIGNAL = voiceActivityDetector( SIGNAL, SAMPLERATE );
