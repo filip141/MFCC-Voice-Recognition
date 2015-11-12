@@ -1,0 +1,16 @@
+clear all
+%% Const variables
+
+SAMPLERATE = 16000;
+
+%% Record and play voice sample 
+% SIGNAL = wavrecord(NSEC*SAMPLERATE,SAMPLERATE,'double');
+[SIGNAL,SAMPLERATE]=wavread('samples/Noise_Samples/MG/MG_1.wav');
+% [SIGNAL,SAMPLERATE]=wavread('samples/Clear_Samples/jeden.wav');
+wavplay(SIGNA)
+featureVector = mfcc(SIGNAL, SAMPLERATE);
+
+%% Recognizing word by no statistic algoritm DTW
+recognizeDTW( featureVector )
+
+

@@ -1,12 +1,11 @@
-function [ output_args ] = mfcc( input_args )
-%   Function extract features from speech signal
-% in this section are used all spectral feature 
-% extraction methods like VAD, windowing, dfft,
-% creating melfilter bank and on the and extracting 
-% mfcc features by performing dct on output from Mel-filterbank
-%
-%   Input : Wav file 16kHz but could be n*16kHz [ 32kHz, 48kHz etc ] 
-%   Output Mf
+function [ output_args ] = mfcc( SIGNAL, SAMPLERATE )
+%   This function contains all modules whith will handle with 
+% spectral future extraction problem. Every single weave 
+% will go through all extraction steps like
+% VAD, preemphasis, filtering, windowing , dfft
+% and on the end mel-filterbank which produeces
+% feature vector for one frame
+%   Input wav signal 
 
 
 end
